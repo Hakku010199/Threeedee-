@@ -1,0 +1,7 @@
+flask
+flask-cors
+sympy
+numpy
+matplotlib
+SQLAlchemy
+werkzeug

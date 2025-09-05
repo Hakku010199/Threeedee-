@@ -21,3 +21,37 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Build output
+/dist
+
+# Python virtual envs
+venv/
+venv2/
+.env
+.env.*
+
+# Editor directories and files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+server.log
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Database
+*.db
+app.db
+
+# Misc
+coverage/
+*.tgz
+
