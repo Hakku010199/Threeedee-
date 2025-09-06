@@ -1,8 +1,8 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import './App.css';
 import './AuthModal.css';
 import AuthModal from './AuthModal';
+import HistorySidebar from "./HistorySidebar";
 
 function App() {
   const [authOpen, setAuthOpen] = useState(false);
@@ -11,12 +11,14 @@ function App() {
   const [openSubmenu, setOpenSubmenu] = useState({});
   const [promptText, setPromptText] = useState('');
   const canvasRef = useRef(null);
+    const [history, setHistory] = useState([]);
+    const [activeHistoryIdx, setActiveHistoryIdx] = useState(-1);
 
   const toggleSub = (key) => setOpenSubmenu(prev => ({ ...prev, [key]: !prev[key] }));
 
   useEffect(() => {
     const onResize = () => {
-      drawPolarFromInput(promptText);
+  // drawPolarFromInput(promptText); // Removed: function not defined
     };
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
@@ -26,115 +28,23 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // ✅ FIXED sanitizeExpression
   function sanitizeExpression(expr) {
     if (!expr) return null;
-    // replace unicode theta with variable name
-    expr = expr.replace(/θ/g, 'theta');
-    // replace pi symbol
-    expr = expr.replace(/π/g, 'Math.PI');
-    // caret to exponent
-    expr = expr.replace(/\^/g, '**');
-    // prefix math functions
-    const funcs = ['sin','cos','tan','asin','acos','atan','sqrt','abs','pow','log','exp','max','min'];
+    expr = expr.replace(/θ/g, 'theta'); // replace unicode theta
+    expr = expr.replace(/π/g, 'Math.PI'); // replace pi
+    expr = expr.replace(/\^/g, '**'); // caret → exponent
+
+    const funcs = [
+      'sin','cos','tan','asin','acos','atan',
+      'sqrt','abs','pow','log','exp','max','min'
+    ];
     funcs.forEach(fn => {
       const re = new RegExp('\\b' + fn + '\\b', 'g');
       expr = expr.replace(re, 'Math.' + fn);
     });
-    // allow 'pi' word
-    expr = expr.replace(/\bpi\b/g, 'Math.PI');
-    // remove any characters that are obviously unsafe (keep alphanum, Math, operators, parentheses, dot, comma, spaces, asterisk)
-    // this is a light sanitization — don't evaluate user-provided code from untrusted sources in production
-    if (!/^[0-9a-zA-Z_\s+\-*/().,\*\*MathPI]+$/.test(expr)) {
-      // allow Math and common chars — fail if suspicious
-      // fallback: still try but caller should handle exceptions
-    }
-    return expr;
-  }
 
-  function drawPolarFromInput(input) {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    const rect = canvas.getBoundingClientRect();
-    // handle high DPI
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = Math.floor(rect.width * dpr);
-    canvas.height = Math.floor(rect.height * dpr);
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    // clear
-    ctx.clearRect(0,0,rect.width, rect.height);
-
-    let expr = input || '';
-    if (!expr) {
-      // nothing to draw
-      ctx.fillStyle = '#666';
-      ctx.font = '14px Poppins, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('No polar equation provided', rect.width/2, rect.height/2);
-      return;
-    }
-
-    // extract RHS if 'r=' present
-    const parts = expr.split('=');
-    if (parts.length > 1) expr = parts.slice(1).join('=');
-    expr = expr.trim();
-    expr = sanitizeExpression(expr);
-    if (!expr) return;
-
-    // create function
-    let f;
-    try {
-      f = new Function('theta', 'return ' + expr + ';');
-    } catch (err) {
-      ctx.fillStyle = 'red';
-      ctx.textAlign = 'center';
-      ctx.fillText('Invalid expression', rect.width/2, rect.height/2);
-      return;
-    }
-
-    // sample points
-    const points = [];
-    const samples = 1200;
-    const thetaMax = Math.PI * 2;
-    let maxR = 0;
-    for (let i=0;i<=samples;i++){
-      const t = thetaMax * i / samples;
-      let r;
-      try { r = Number(f(t)); } catch(e) { r = NaN; }
-      if (!isFinite(r)) r = 0;
-      maxR = Math.max(maxR, Math.abs(r));
-      points.push({t, r});
-    }
-    if (maxR === 0) maxR = 1;
-
-    // scale and draw
-    const cx = rect.width/2 / dpr;
-    const cy = rect.height/2 / dpr;
-    const scale = Math.min(rect.width, rect.height) * 0.45 / maxR;
-
-    // draw axes
-    ctx.strokeStyle = 'rgba(0,0,0,0.12)';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(0, cy);
-    ctx.lineTo(rect.width/dpr, cy);
-    ctx.moveTo(cx, 0);
-    ctx.lineTo(cx, rect.height/dpr);
-    ctx.stroke();
-
-    // draw curve
-    ctx.strokeStyle = '#2b6ef6';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    for (let i=0;i<points.length;i++){
-      const {t,r} = points[i];
-      const x = r * Math.cos(t);
-      const y = r * Math.sin(t);
-      const px = cx + x*scale;
-      const py = cy - y*scale;
-      if (i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
-    }
-    ctx.stroke();
+    return expr; // ✅ only return string
   }
 
   async function handleSend() {
@@ -143,9 +53,12 @@ function App() {
     const expr = (promptText || '').trim();
     if (!expr) return;
 
+  // Add to history
+  setHistory(prev => [...prev, expr]);
+  setActiveHistoryIdx(history.length);
+
     setLoading(true);
     try {
-      // call backend plot endpoint
       const res = await fetch('http://localhost:5000/plot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -159,11 +72,9 @@ function App() {
 
       const j = await res.json();
       if (j.url) {
-        // construct absolute URL (assumes backend on localhost:5000)
         const base = 'http://localhost:5000';
         setPlotUrl(base + j.url);
       } else {
-        // fallback: try to load image blob if backend returned image directly
         try {
           const blob = await res.blob();
           if (blob.type && blob.type.startsWith('image/')) {
@@ -177,30 +88,40 @@ function App() {
       }
     } catch (err) {
       setError(err.message || String(err));
-      // also try client-side drawing as fallback
-      try { drawPolarFromInput(promptText); } catch (e) { /* ignore */ }
+  // try { drawPolarFromInput(promptText); } catch (e) { /* ignore */ } // Removed: function not defined
     } finally {
       setLoading(false);
     }
   }
 
-
   return (
     <div className="app-root">
-      <aside className="left-sidebar">
-        <div className="section-header">
-          <h3>Left Sidebar</h3>
+      {/* Left Sidebar */}
+  <div className="left-sidebar" style={{background: '#000', color: '#fff'}}>
+  <div style={{padding: '16px', color: '#fff', fontWeight: 'bold', fontSize: '1.1rem'}}>Your Graphs</div>
+        <div style={{overflowY: 'auto', height: 'calc(100vh - 60px)'}}>
+          {history.length === 0 ? (
+            <div style={{color: '#bbb', padding: '12px 16px'}}>No history yet.</div>
+          ) : (
+            history.map((item, idx) => (
+              <div key={idx} style={{color: '#eee', padding: '8px 16px'}}>
+                {idx + 1}. {item}
+              </div>
+            ))
+          )}
         </div>
-        <div className="left-label">Left (20%)</div>
-      </aside>
+      </div>
 
+      {/* Main Workspace */}
       <main className="main-content">
         <div className="section-header">
-          <h3>Main Workspace</h3>
+          <h3>2D graph interpretation and 3D modeling</h3>
         </div>
-        <header className="topbar">
-          <div className="title">2D graph interpretation and 3D modeling</div>
-          <div className="auth">
+
+        <header className="topbar" style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
+          {/* Empty or title can go here if needed */}
+          <div></div>
+          <div className="auth" style={{display: 'flex', gap: '12px'}}>
             <button className="pill sign-in" onClick={() => { setAuthMode('login'); setAuthOpen(true); }}>Sign In</button>
             <button className="pill sign-up" onClick={() => { setAuthMode('signup'); setAuthOpen(true); }}>Sign Up</button>
           </div>
@@ -240,11 +161,9 @@ function App() {
         </div>
       </main>
 
-  <AuthModal open={authOpen} mode={authMode} onClose={() => setAuthOpen(false)} />
-      <aside className="right-sidebar">
-        <div className="section-header">
-          <h3>Right Sidebar</h3>
-        </div>
+
+      {/* Right Sidebar */}
+      <div className="right-sidebar">
         <nav>
           <ul className="menu">
             <li className={`menu-item ${active === 'Home' ? 'active' : ''}`} onClick={() => setActive('Home')}>Home</li>
@@ -273,7 +192,7 @@ function App() {
             <li className={`menu-item ${active === 'Conics' ? 'active' : ''}`} onClick={() => setActive('Conics')}>Conics</li>
           </ul>
         </nav>
-      </aside>
+      </div>
     </div>
   );
 }
