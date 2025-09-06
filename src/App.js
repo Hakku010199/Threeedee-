@@ -11,10 +11,16 @@ function App() {
   return (
     <div className="app-root">
       <aside className="left-sidebar">
+        <div className="section-header">
+          <h3>Left Sidebar</h3>
+        </div>
         <div className="left-label">Left (20%)</div>
       </aside>
 
       <main className="main-content">
+        <div className="section-header">
+          <h3>Main Workspace</h3>
+        </div>
         <header className="topbar">
           <div className="title">2D graph interpretation and 3D modeling</div>
           <div className="auth">
@@ -24,7 +30,21 @@ function App() {
         </header>
 
         <section className="main-body">
-          <div className="placeholder">Enter polar eqn in the prompt to generate 2D graph (e.g. r=sin(3θ))</div>
+          <div className="center-split">
+            <div className="half top-half">
+              <div className="half-header"><h4>2D Preview</h4></div>
+              <div className="half-content">
+                <div className="placeholder">Enter polar eqn in the prompt to generate 2D graph (e.g. r=sin(3θ))</div>
+              </div>
+            </div>
+
+            <div className="half bottom-half">
+              <div className="half-header"><h4>3D Model</h4></div>
+              <div className="half-content">
+                <div className="placeholder">3D model preview will appear here (placeholder)</div>
+              </div>
+            </div>
+          </div>
         </section>
 
         <div className="input-bar">
@@ -34,6 +54,9 @@ function App() {
       </main>
 
       <aside className="right-sidebar">
+        <div className="section-header">
+          <h3>Right Sidebar</h3>
+        </div>
         <nav>
           <ul className="menu">
             <li className={`menu-item ${active === 'Home' ? 'active' : ''}`} onClick={() => setActive('Home')}>Home</li>
