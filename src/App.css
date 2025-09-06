@@ -1,3 +1,23 @@
+/* Content section below main layout */
+.content-section {
+  width: 100%;
+  background: #f9f9fc;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(30,30,60,0.07);
+  margin: 24px auto 0 auto;
+  max-width: 1200px;
+  animation: fadeInSection 0.5s;
+}
+
+@keyframes fadeInSection {
+  from { opacity: 0; transform: translateY(24px);}
+  to { opacity: 1; transform: translateY(0);}
+}
+
+.fade-in {
+  animation: fadeInSection 0.5s;
+}
 /* Import Poppins */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
 

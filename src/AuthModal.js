@@ -26,7 +26,7 @@ export default function AuthModal({ open, mode = 'login', onClose }) {
     setLoading(true);
     try {
       if (current === 'signup') {
-        const res = await fetch('http://localhost:5001/register', {
+  const res = await fetch('http://localhost:5000/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password, username })
@@ -38,7 +38,7 @@ export default function AuthModal({ open, mode = 'login', onClose }) {
         setCurrent('login');
         setUsername(''); setPassword(''); setEmail('');
       } else {
-        const res = await fetch('http://localhost:5001/login', {
+  const res = await fetch('http://localhost:5000/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password })
