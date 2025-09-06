@@ -11,6 +11,7 @@ export default function AuthModal({ open, mode = 'login', onClose }) {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [successMsg, setSuccessMsg] = useState("");
 
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') onClose(); };
@@ -21,6 +22,7 @@ export default function AuthModal({ open, mode = 'login', onClose }) {
   async function handleSubmit(e) {
     e.preventDefault();
     setError(null);
+    setSuccessMsg("");
     setLoading(true);
     try {
       if (current === 'signup') {
@@ -31,8 +33,7 @@ export default function AuthModal({ open, mode = 'login', onClose }) {
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Registration failed');
-        // success - show alert "set"
-        alert('set');
+        setSuccessMsg("Welcome!");
         // switch to login after successful signup
         setCurrent('login');
         setUsername(''); setPassword(''); setEmail('');
@@ -44,10 +45,14 @@ export default function AuthModal({ open, mode = 'login', onClose }) {
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Login failed');
+        setSuccessMsg("You're logged in.");
         // store token locally (simple demo)
         localStorage.setItem('auth_token', data.token);
-        // close modal on success
-        onClose();
+        // close modal on success after a short delay
+        setTimeout(() => {
+          setSuccessMsg("");
+          onClose();
+        }, 1200);
       }
     } catch (err) {
       setError(err.message || 'Request failed');
@@ -130,7 +135,12 @@ export default function AuthModal({ open, mode = 'login', onClose }) {
               {loading ? (current === 'login' ? 'Signing in...' : 'Signing up...') : (current === 'login' ? 'SIGN IN' : 'SIGN UP')}
             </button>
 
-            {error && <div style={{ color: 'red', marginTop: 8 }}>{error}</div>}
+
+            {/* Success and error messages at the bottom */}
+            <div style={{ marginTop: 18, minHeight: 24, textAlign: "center", fontSize: "1rem" }}>
+              {error && <span style={{ color: 'red' }}>{error}</span>}
+              {successMsg && <span style={{ color: "#00A86B" }}>{successMsg}</span>}
+            </div>
 
             <div className="auth-footer">
               {current === 'login' ? (

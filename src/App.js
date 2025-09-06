@@ -2,9 +2,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './App.css';
 import './AuthModal.css';
-import AuthForms from './AuthForms';
+import AuthModal from './AuthModal';
 
 function App() {
+  const [authOpen, setAuthOpen] = useState(false);
+  const [authMode, setAuthMode] = useState('login');
   const [active, setActive] = useState('Introduction');
   const [openSubmenu, setOpenSubmenu] = useState({});
   const [promptText, setPromptText] = useState('');
@@ -199,8 +201,8 @@ function App() {
         <header className="topbar">
           <div className="title">2D graph interpretation and 3D modeling</div>
           <div className="auth">
-            <button className="pill sign-in">Sign In</button>
-            <button className="pill sign-up">Sign Up</button>
+            <button className="pill sign-in" onClick={() => { setAuthMode('login'); setAuthOpen(true); }}>Sign In</button>
+            <button className="pill sign-up" onClick={() => { setAuthMode('signup'); setAuthOpen(true); }}>Sign Up</button>
           </div>
         </header>
 
@@ -238,7 +240,7 @@ function App() {
         </div>
       </main>
 
-  <AuthForms />
+  <AuthModal open={authOpen} mode={authMode} onClose={() => setAuthOpen(false)} />
       <aside className="right-sidebar">
         <div className="section-header">
           <h3>Right Sidebar</h3>
