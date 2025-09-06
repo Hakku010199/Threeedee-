@@ -1,6 +1,8 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import './App.css';
+import './AuthModal.css';
+import AuthForms from './AuthForms';
 
 function App() {
   const [active, setActive] = useState('Introduction');
@@ -236,6 +238,7 @@ function App() {
         </div>
       </main>
 
+  <AuthForms />
       <aside className="right-sidebar">
         <div className="section-header">
           <h3>Right Sidebar</h3>

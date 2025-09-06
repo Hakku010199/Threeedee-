@@ -1,7 +1,7 @@
 from flask import Flask, request, send_file, send_from_directory, jsonify
 from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
-from sqlalchemy import Column, Integer, String, Text, ForeignKey, DateTime, create_engine
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, DateTime, create_engine, text
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 import io
@@ -26,6 +26,7 @@ CORS(app)
 DB_PATH = os.path.join(BASE_DIR, "app.db")
 engine = create_engine(f"sqlite:///{DB_PATH}", connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(bind=engine)
+from sqlalchemy.orm import declarative_base
 Base = declarative_base()
 
 class User(Base):
@@ -48,6 +49,14 @@ class Plot(Base):
     user = relationship("User", back_populates="plots")
 
 Base.metadata.create_all(engine)
+
+# Test the database connection at startup
+try:
+    with engine.connect() as connection:
+        result = connection.execute(text("SELECT 1"))
+        print("Database connection test result:", result.fetchone())
+except Exception as e:
+    print("Database connection failed:", e)
 
 # SymPy setup
 theta = sp.symbols("theta")
@@ -189,5 +198,19 @@ def my_plots():
     return jsonify({"plots": plots})
 
 if __name__ == "__main__":
-    print("Server starting on 0.0.0.0:5000")
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    import os
+    import sys
+    port = 5000
+    # Allow port override via command-line argument or environment variable
+    if len(sys.argv) > 1:
+        try:
+            port = int(sys.argv[1])
+        except Exception:
+            pass
+    elif os.environ.get("PORT"):
+        try:
+            port = int(os.environ["PORT"])
+        except Exception:
+            pass
+    print(f"Server starting on 0.0.0.0:{port}")
+    app.run(host="0.0.0.0", port=port, debug=True)
