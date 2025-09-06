@@ -1,3 +1,51 @@
+/* Enhanced styles for Sign In and Sign Up buttons */
+.pill {
+  padding: 8px 28px;
+  border-radius: 999px;
+  border: none;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 
+    background 0.2s,
+    color 0.2s,
+    box-shadow 0.2s,
+    transform 0.1s;
+  box-shadow: 0 2px 8px rgba(30,30,60,0.07);
+  margin: 0 4px;
+  outline: none;
+}
+
+.sign-in {
+  background: linear-gradient(90deg, #2e3192 0%, #1bffff 100%);
+  color: #fff;
+  border: 2px solid #2e3192;
+}
+.sign-in:hover, .sign-in:focus {
+  background: linear-gradient(90deg, #1bffff 0%, #2e3192 100%);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(46,49,146,0.15);
+  transform: translateY(-2px) scale(1.04);
+}
+
+.sign-up {
+  background: linear-gradient(90deg, #ff512f 0%, #dd2476 100%);
+  color: #fff;
+  border: 2px solid #ff512f;
+}
+.sign-up:hover, .sign-up:focus {
+  background: linear-gradient(90deg, #dd2476 0%, #ff512f 100%);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(221,36,118,0.15);
+  transform: translateY(-2px) scale(1.04);
+}
+/* Add Castellar font-face if available, fallback to system serif */
+@font-face {
+  font-family: 'Castellar';
+  src: local('Castellar'), local('Castellar Regular');
+  font-weight: normal;
+  font-style: normal;
+}
 /* Content section below main layout */
 .content-section {
   width: 100%;

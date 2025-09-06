@@ -27,32 +27,76 @@ These families of curves illustrate the power of polar functions in describing a
     },
     Circles: {
       heading: "Circles",
-      text: "This is a placeholder for Circles. Replace with your own content."
+      text: `A circle is one of the simplest and most fundamental shapes in mathematics, and its representation in polar coordinates is particularly elegant. In the polar system, a circle centered at the origin is described by the equation r = a, where a is the radius. Every point on the circle is at a constant distance from the origin, regardless of the angle θ.
+
+Circles can also be represented with their centers offset from the origin using equations like r = a·cos(θ) or r = a·sin(θ). For example:
+• r = 4 describes a circle of radius 4 centered at the origin.
+• r = 6·cos(θ) describes a circle of radius 3 centered at (3, 0).
+• r = 6·sin(θ) describes a circle of radius 3 centered at (0, 3).
+
+These forms are derived from the relationships between polar and Cartesian coordinates:
+• x = r·cos(θ)
+• y = r·sin(θ)
+
+Circles are foundational in geometry and appear in countless applications, from engineering and physics to computer graphics and natural phenomena. Their symmetry and simplicity make them a key starting point for exploring more complex polar curves.`
     },
     Cardioids: {
       heading: "Cardioids",
-      text: "This is a placeholder for Cardioids. Replace with your own content."
+      text: `A cardioid is a heart-shaped curve that appears frequently in mathematics and physics, especially in the study of acoustics and optics. In polar coordinates, a cardioid is described by the equation r = a(1 + cosθ) or r = a(1 + sinθ), where a is a constant that determines the size of the cardioid.
+
+The curve is symmetric about the x-axis for r = a(1 + cosθ) and about the y-axis for r = a(1 + sinθ). The cardioid has a cusp at the pole (origin) and a maximum radius of 2a. Its unique shape makes it useful for modeling phenomena such as sound wave patterns and antenna radiation.
+
+Cardioids are a special case of the limaçon family of curves and are notable for their simple yet elegant polar equations.`
     },
     Rose: {
       heading: "Rose Curves",
-      text: "This is a placeholder for Rose Curves. Replace with your own content."
+      text: `Rose curves are a family of mathematical curves that produce petal-like patterns. Their general polar form is r = a·cos(kθ) or r = a·sin(kθ), where a determines the size and k determines the number of petals.
+
+If k is odd, the curve has k petals; if k is even, it has 2k petals. For example, r = cos(3θ) creates a three-petaled rose, while r = 2·sin(4θ) creates an eight-petaled rose.
+
+Rose curves are visually striking and are often used to demonstrate the beauty and symmetry of polar equations. They are also studied in the context of harmonic motion and signal processing.`
     },
     Lemniscates: {
       heading: "Lemniscates",
-      text: "This is a placeholder for Lemniscates. Replace with your own content."
+      text: `A lemniscate is a figure-eight or infinity-shaped curve. In polar coordinates, the most common forms are r² = a²·cos(2θ) and r² = a²·sin(2θ), where a controls the size of the lemniscate.
+
+The lemniscate of Bernoulli (r² = a²·cos(2θ)) is aligned along the x-axis, while r² = a²·sin(2θ) is rotated by 45 degrees. These curves are important in complex analysis and have applications in physics, engineering, and the study of elliptic functions.
+
+Lemniscates are notable for their symmetry and their appearance in various natural and mathematical contexts.`
     },
     Spirals: {
       heading: "Spirals",
-      text: "This is a placeholder for Spirals. Replace with your own content."
+      text: `Spirals are curves that wind around a central point, getting progressively farther away as they revolve. In polar coordinates, two common types are the Archimedean spiral (r = a + bθ) and the logarithmic spiral (r = a·e^{bθ}).
+
+The Archimedean spiral increases linearly with θ, resulting in equally spaced turns. The logarithmic spiral increases exponentially, so the spacing between turns grows rapidly. Spirals are found in nature (such as in shells and galaxies), engineering, and art.
+
+Their mathematical properties make them useful for modeling growth, waves, and rotational motion.`
     },
     Conics: {
       heading: "Conics",
-      text: "This is a placeholder for Conics. Replace with your own content."
+      text: `Conic sections (or conics) are curves obtained by intersecting a plane with a cone. In polar coordinates, the general equation for a conic section with the focus at the pole is r = (e·d)/(1 + e·cosθ), where e is the eccentricity and d is the distance from the directrix to the pole.
+
+Depending on the value of e, the conic can be a circle (e = 0), ellipse (0 < e < 1), parabola (e = 1), or hyperbola (e > 1). Conics are fundamental in geometry, astronomy, and physics, describing planetary orbits, reflective properties, and more.
+
+Their polar representation highlights the relationship between distance and angle, making them especially useful in orbital mechanics and optics.`
     }
   };
   const [authOpen, setAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState('login');
   const [active, setActive] = useState('Introduction');
+  const contentRef = useRef(null);
+  // Username state (simulate login for now)
+  const [username, setUsername] = useState('just-hakku'); // Replace with null if you want to hide by default
+
+  // Scroll to content section if not in view when active changes
+  useEffect(() => {
+    if (contentRef.current) {
+      const rect = contentRef.current.getBoundingClientRect();
+      if (rect.top < 0 || rect.bottom > window.innerHeight) {
+        contentRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+  }, [active]);
   const [openSubmenu, setOpenSubmenu] = useState({});
   const [promptText, setPromptText] = useState('');
   const canvasRef = useRef(null);
@@ -98,9 +142,9 @@ These families of curves illustrate the power of polar functions in describing a
     const expr = (promptText || '').trim();
     if (!expr) return;
 
-  // Add to history
-  setHistory(prev => [...prev, expr]);
-  setActiveHistoryIdx(history.length);
+  // Add to history (latest on top)
+  setHistory(prev => [expr, ...prev]);
+  setActiveHistoryIdx(0);
 
     setLoading(true);
     try {
@@ -145,15 +189,130 @@ These families of curves illustrate the power of polar functions in describing a
       <AuthModal open={authOpen} mode={authMode} onClose={() => setAuthOpen(false)} />
       <div className="app-root">
       {/* Left Sidebar */}
-  <div className="left-sidebar" style={{background: '#000', color: '#fff'}}>
-  <div style={{padding: '16px', color: '#fff', fontWeight: 'bold', fontSize: '1.1rem'}}>Your Graphs</div>
+      <div className="left-sidebar" style={{background: '#000', color: '#fff'}}>
+        {username && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            padding: '16px 16px 8px 16px',
+            color: '#b3e5fc',
+            fontWeight: 'bold',
+            fontSize: '1rem'
+          }}>
+            <span style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 28,
+              height: 28,
+              borderRadius: '50%',
+              background: '#222',
+              marginRight: 8,
+              fontSize: 18
+            }}>
+              <span role="img" aria-label="user">👤</span>
+            </span>
+            {username}
+          </div>
+        )}
+        <div style={{padding: '0 16px 12px 16px', color: '#fff', fontWeight: 'bold', fontSize: '1.1rem'}}>Your Graphs</div>
         <div style={{overflowY: 'auto', height: 'calc(100vh - 60px)'}}>
           {history.length === 0 ? (
             <div style={{color: '#bbb', padding: '12px 16px'}}>No history yet.</div>
           ) : (
             history.map((item, idx) => (
-              <div key={idx} style={{color: '#eee', padding: '8px 16px'}}>
-                {idx + 1}. {item}
+              <div
+                key={idx}
+                style={{
+                  color: '#eee',
+                  padding: '8px 16px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  borderBottom: '1px solid #222'
+                }}
+              >
+                <span>
+                  {idx + 1}. {item}
+                </span>
+                <span style={{display: 'flex', gap: 8}}>
+                  {/* Font Awesome Load (Upload) Icon with tooltip */}
+                  <button
+                    title="Load"
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#4fc3f7',
+                      cursor: 'pointer',
+                      fontSize: 20,
+                      padding: 0,
+                      position: 'relative'
+                    }}
+                    onClick={() => {
+                      setPromptText(item);
+                      setError(null);
+                      setPlotUrl(null);
+                      setLoading(true);
+                      fetch('http://localhost:5000/plot', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ expr: item })
+                      })
+                        .then(res => {
+                          if (!res.ok) return res.json().then(j => { throw new Error(j.error || `${res.status} ${res.statusText}`); });
+                          return res.json();
+                        })
+                        .then(j => {
+                          if (j.url) {
+                            const base = 'http://localhost:5000';
+                            setPlotUrl(base + j.url);
+                          }
+                        })
+                        .catch(err => setError(err.message || String(err)))
+                        .finally(() => setLoading(false));
+                    }}
+                    onMouseEnter={e => {
+                      const tooltip = document.createElement('span');
+                      tooltip.textContent = 'Load';
+                      tooltip.style.position = 'absolute';
+                      tooltip.style.bottom = '-24px';
+                      tooltip.style.left = '50%';
+                      tooltip.style.transform = 'translateX(-50%)';
+                      tooltip.style.background = '#222';
+                      tooltip.style.color = '#fff';
+                      tooltip.style.padding = '2px 8px';
+                      tooltip.style.borderRadius = '4px';
+                      tooltip.style.fontSize = '0.85rem';
+                      tooltip.style.whiteSpace = 'nowrap';
+                      tooltip.className = 'history-tooltip';
+                      e.currentTarget.appendChild(tooltip);
+                    }}
+                    onMouseLeave={e => {
+                      const tooltip = e.currentTarget.querySelector('.history-tooltip');
+                      if (tooltip) e.currentTarget.removeChild(tooltip);
+                    }}
+                  >
+                    <i className="fa-solid fa-arrow-up-from-bracket"></i>
+                  </button>
+                  {/* Font Awesome Delete Icon */}
+                  <button
+                    title="Delete"
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#ff5252',
+                      cursor: 'pointer',
+                      fontSize: 20,
+                      padding: 0
+                    }}
+                    onClick={() => {
+                      setHistory(prev => prev.filter((_, i) => i !== idx));
+                    }}
+                  >
+                    <i className="fa-solid fa-trash"></i>
+                  </button>
+                </span>
               </div>
             ))
           )}
@@ -163,7 +322,16 @@ These families of curves illustrate the power of polar functions in describing a
       {/* Main Workspace */}
       <main className="main-content">
         <div className="section-header">
-          <h3>2D graph interpretation and 3D modeling</h3>
+          <h3 style={{
+            fontFamily: 'Castellar, serif',
+            fontWeight: 'bold',
+            letterSpacing: '2px',
+            fontSize: '2rem',
+            color: '#222',
+            textShadow: '1px 1px 2px #bbb'
+          }}>
+            2D graph interpretation and 3D modeling
+          </h3>
         </div>
 
         <header className="topbar" style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
@@ -239,10 +407,52 @@ These families of curves illustrate the power of polar functions in describing a
       </div>
     </div>
     {/* Content Section Below Main Layout */}
-    {active && sectionContent[active] && (
-      <div className="content-section fade-in">
-        <h2>{sectionContent[active].heading}</h2>
-        <p>{sectionContent[active].text}</p>
+    {sectionContent[active] && (
+      <div
+        ref={contentRef}
+        className="content-section fade-in"
+        style={{
+          width: '100%',
+          maxWidth: '100%',
+          margin: '24px 0 0 0',
+          background: '#f9f9fc',
+          padding: 20,
+          borderRadius: 12,
+          boxShadow: '0 2px 12px rgba(30,30,60,0.07)',
+          textAlign: 'left'
+        }}
+      >
+        <h2 style={{ textAlign: 'left' }}>{sectionContent[active].heading}</h2>
+        {active === 'Introduction' ? (
+          <div style={{ textAlign: 'left' }}>
+            <p>
+              A polar function is a mathematical relation expressed in the polar coordinate system, where each point on a plane is represented by two quantities: its distance from the origin, called the radius <b>r</b>, and the angle <b>θ</b>, measured from the positive x-axis. Unlike the Cartesian system, which uses the form <b>y=f(x)</b>, polar functions are written as <b>r=f(θ)</b>. This form is particularly advantageous for describing curves that exhibit circular, radial, or symmetric properties, many of which are complex or cumbersome to represent in Cartesian coordinates. Conversion between polar and Cartesian systems is straightforward using the transformations <b>x=r·cos(θ)</b> and <b>y=r·sin(θ)</b>. Because of these characteristics, polar functions are widely applied in physics, engineering, computer graphics, and fields where rotational or radial symmetry naturally arises.
+            </p>
+            <p>Several well-known families of curves can be elegantly represented in polar form:</p>
+            <ol style={{ marginLeft: 24 }}>
+              <li>
+                <b>Circle</b> – One of the simplest curves in polar coordinates, the general form is given by <b>r=a</b> or <b>r=a·cos(θ)</b>, <b>r=a·sin(θ)</b>. For example, <b>r=4</b> represents a circle of radius 4 centered at the origin, while <b>r=6·cos(θ)</b> represents a circle of radius 3 centered at (3, 0).
+              </li>
+              <li>
+                <b>Cardioid</b> – A heart-shaped curve, expressed as <b>r=a(1+cosθ)</b> or <b>r=a(1+sinθ)</b>. For instance, <b>r=1+cosθ</b> generates a cardioid symmetric about the x-axis, whereas <b>r=2(1+sinθ)</b> produces a cardioid symmetric about the y-axis.
+              </li>
+              <li>
+                <b>Rose Curve</b> – Known for its petal-like structure, the rose curve takes the form <b>r=a·cos(kθ)</b> or <b>r=a·sin(kθ)</b>. The parameter <b>k</b> determines the number of petals: if <b>k</b> is odd, the number of petals equals <b>k</b>, and if <b>k</b> is even, the number of petals equals <b>2k</b>. For example, <b>r=cos(3θ)</b> generates a rose with three petals, while <b>r=2·sin(4θ)</b> produces a rose with eight petals.
+              </li>
+              <li>
+                <b>Lemniscate</b> – An infinity-shaped curve (∞), expressed as <b>r²=a²·cos(2θ)</b> or <b>r²=a²·sin(2θ)</b>. The equation <b>r²=cos(2θ)</b> yields a lemniscate aligned along the x-axis, whereas <b>r²=9·sin(2θ)</b> gives a lemniscate rotated at 45 degrees.
+              </li>
+              <li>
+                <b>Spiral Curves</b> – Represent growth or expansion around the pole. Two common forms are the Archimedean spiral, <b>r=a+bθ</b>, and the logarithmic spiral, <b>r=ae<sup>bθ</sup></b>. For example, <b>r=θ</b> represents an Archimedean spiral beginning at the pole, while <b>r=2e<sup>0.2θ</sup></b> describes a logarithmic spiral that expands outward exponentially.
+              </li>
+            </ol>
+            <p>
+              These families of curves illustrate the power of polar functions in describing a wide range of geometric patterns. Their ability to express symmetry and radial structures makes them indispensable in both theoretical mathematics and practical applications.
+            </p>
+          </div>
+        ) : (
+          <p>{sectionContent[active].text}</p>
+        )}
       </div>
     )}
     </>
