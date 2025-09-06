@@ -64,6 +64,7 @@ body { font-family: 'Poppins', sans-serif; margin: 0; }
 .half-header { padding: 10px 12px; background: rgba(255,255,255,0.6); border-bottom: 1px solid rgba(0,0,0,0.06); }
 .half-header h4 { margin: 0; font-size: 15px; color: #222; }
 .half-content { flex: 1; display:flex; align-items:center; justify-content:center; padding: 12px; }
+.plot-canvas { width: 100%; height: 100%; display: block; border-radius: 6px; background: #fff; }
 
 /* Input bar (fixed to bottom of main area) */
 .input-bar {
