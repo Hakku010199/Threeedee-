@@ -1,13 +1,14 @@
-# Helper for rose curve sweep
-def generate_rose_curve_plots(expr_template, a_range, k_range):
-    t = np.linspace(0, 2 * np.pi, 2000)
+# Helper for Archimedean spiral sweep
+def generate_archimedean_spiral_plots(expr_template, a_range, b_range):
+    t = np.linspace(0, 4 * np.pi, 2000)
     fig = plt.figure(figsize=(7,7))
     ax = fig.add_subplot(111)
     a_start, a_end, a_step = a_range
-    k_start, k_end, k_step = k_range
-    for a in np.arange(a_start, a_end + a_step, a_step):
-        for k in range(k_start, k_end + 1, k_step):
-            expr_str = expr_template.replace('a', f'({a})').replace('k', f'({k})')
+    b_start, b_end, b_step = b_range
+    # a: 0.1 to 10, step 0.1 (100 values); b: 1 to 10, step 1 (10 values)
+    for a in np.arange(a_start, a_end + a_step/2, a_step):
+        for b in np.arange(b_start, b_end + b_step/2, b_step):
+            expr_str = expr_template.replace('a', f'({a})').replace('b', f'({b})')
             expr_sym = sp.sympify(expr_str, locals=_allowed)
             f = sp.lambdify(theta, expr_sym, modules=["numpy"])
             try:
@@ -18,7 +19,99 @@ def generate_rose_curve_plots(expr_template, a_range, k_range):
                 ax.plot(x, y, alpha=0.5)
             except Exception:
                 continue
-    ax.set_title(f"Rose curves for a in [{a_start},{a_end}], k in [{k_start},{k_end}]")
+    ax.set_title(f"Archimedean spirals for a in [{a_start},{a_end}], b in [{b_start},{b_end}]")
+    ax.set_xlabel("x")
+    ax.set_ylabel("y")
+    ax.grid(True)
+    ax.set_aspect('equal', adjustable='box')
+    buf = io.BytesIO()
+    plt.tight_layout()
+    fig.savefig(buf, format="png", dpi=120)
+    plt.close(fig)
+    buf.seek(0)
+    return buf
+def generate_lemniscate_plots(expr_template, a_range):
+    t = np.linspace(0, 2 * np.pi, 2000)
+    fig = plt.figure(figsize=(7,7))
+    ax = fig.add_subplot(111)
+    a_start, a_end, a_step = a_range
+    for a in np.arange(a_start, a_end + a_step/2, a_step):
+        expr_str = expr_template.replace('a', f'({a})')
+        expr_sym = sp.sympify(expr_str, locals=_allowed)
+        f = sp.lambdify(theta, expr_sym, modules=["numpy"])
+        try:
+            r = f(t)
+            r = np.array(r, dtype=float)
+            x = r * np.cos(t)
+            y = r * np.sin(t)
+            ax.plot(x, y, alpha=0.5)
+        except Exception:
+            continue
+    ax.set_title(f"Lemniscates for a in [{a_start},{a_end}]")
+    ax.set_xlabel("x")
+    ax.set_ylabel("y")
+    ax.grid(True)
+    ax.set_aspect('equal', adjustable='box')
+    buf = io.BytesIO()
+    plt.tight_layout()
+    fig.savefig(buf, format="png", dpi=120)
+    plt.close(fig)
+    buf.seek(0)
+    return buf
+# Helper for rose curve sweep
+def generate_rose_curve_plots(expr_template, a_range, k_range, types=("cos", "sin")):
+    t = np.linspace(0, 2 * np.pi, 2000)
+    fig = plt.figure(figsize=(7,7))
+    ax = fig.add_subplot(111)
+    a_start, a_end, a_step = a_range
+    k_start, k_end, k_step = k_range
+    for trig in types:
+        for a in np.arange(a_start, a_end + a_step, a_step):
+            for k in range(k_start, k_end + 1, k_step):
+                expr_str = expr_template.replace('a', f'({a})').replace('k', f'({k})')
+                expr_str = expr_str.replace("cos", trig).replace("sin", trig)
+                expr_sym = sp.sympify(expr_str, locals=_allowed)
+                f = sp.lambdify(theta, expr_sym, modules=["numpy"])
+                try:
+                    r = f(t)
+                    r = np.array(r, dtype=float)
+                    x = r * np.cos(t)
+                    y = r * np.sin(t)
+                    ax.plot(x, y, alpha=0.5)
+                except Exception:
+                    continue
+    ax.set_title(f"Rose curves for a in [{a_start},{a_end}], k in [{k_start},{k_end}], types={types}")
+    ax.set_xlabel("x")
+    ax.set_ylabel("y")
+    ax.grid(True)
+    ax.set_aspect('equal', adjustable='box')
+    buf = io.BytesIO()
+    plt.tight_layout()
+    fig.savefig(buf, format="png", dpi=120)
+    plt.close(fig)
+    buf.seek(0)
+    return buf
+
+def generate_cardioid_plots(expr_template, a_range, types=("cos", "sin")):
+    t = np.linspace(0, 2 * np.pi, 2000)
+    fig = plt.figure(figsize=(7,7))
+    ax = fig.add_subplot(111)
+    a_start, a_end, a_step = a_range
+    for trig in types:
+        for a in np.arange(a_start, a_end + a_step, a_step):
+            expr_str = expr_template.replace('a', f'({a})')
+            expr_str = expr_str.replace("cos", trig).replace("sin", trig)
+            expr_sym = sp.sympify(expr_str, locals=_allowed)
+            f = sp.lambdify(theta, expr_sym, modules=["numpy"])
+            try:
+                r = f(t)
+                r = np.array(r, dtype=float)
+                x = r * np.cos(t)
+                y = r * np.sin(t)
+                ax.plot(x, y, alpha=0.5)
+            except Exception:
+                continue
+    ax.set_title(f"Cardioids for a in [{a_start},{a_end}], types={types}")
     ax.set_xlabel("x")
     ax.set_ylabel("y")
     ax.grid(True)
@@ -203,20 +296,61 @@ def plot():
         return jsonify({"error": "No expression provided"}), 400
 
     expr_norm = normalize_expression(expr_raw)
-    # Check for rose curve sweep
+
+    # Detect rose curve, cardioid, spiral, lemniscate
     a_range = None
     k_range = None
+    b_range = None
     is_rose = False
+    is_cardioid = False
+    is_spiral = False
+    is_lemniscate = False
+
+    # Rose: r = a * cos(k*theta) or r = a * sin(k*theta)
     if ('a' in expr_norm and 'k' in expr_norm and ('cos' in expr_norm or 'sin' in expr_norm)):
         is_rose = True
+    # Cardioid: r = a(1+cos(theta)) or r = a(1+sin(theta))
+    if ('a' in expr_norm and ('1+cos(theta)' in expr_norm or '1+sin(theta)' in expr_norm)):
+        is_cardioid = True
+    # Archimedean spiral: r = a + b*theta
+    if ('a' in expr_norm and 'b' in expr_norm and 'theta' in expr_norm and ('+' in expr_norm or '-' in expr_norm)):
+        is_spiral = True
+    # Lemniscate: r^2 = a^2 * cos(2*theta) or r^2 = a^2 * sin(2*theta)
+    if (('a' in expr_norm) and (('cos(2*theta)' in expr_norm) or ('sin(2*theta)' in expr_norm)) and ('^2' in expr_norm or '**2' in expr_norm)):
+        is_lemniscate = True
+
     if is_rose and data.get('a_sweep') and data.get('k_sweep'):
         a_range = [0.1, 10, 0.1]
         k_range = [1, 10, 1]
+        types = ("cos", "sin")
         try:
-            buf = generate_rose_curve_plots(expr_norm, a_range, k_range)
+            buf = generate_rose_curve_plots(expr_norm, a_range, k_range, types=("cos", "sin"))
         except Exception as e:
             db.close()
             return jsonify({"error": f"Error generating rose curves: {e}"}), 400
+    elif is_cardioid and (data.get('a_sweep') or data.get('a_range')):
+        a_range = data.get('a_range', [0.1, 10, 0.1])
+        types = ("cos", "sin")
+        try:
+            buf = generate_cardioid_plots(expr_norm, a_range, types=types)
+        except Exception as e:
+            db.close()
+            return jsonify({"error": f"Error generating cardioids: {e}"}), 400
+    elif is_spiral and (data.get('a_sweep') or data.get('b_sweep')):
+        a_range = [0.1, 10, 0.1]
+        b_range = [1, 10, 1]
+        try:
+            buf = generate_archimedean_spiral_plots(expr_norm, a_range, b_range)
+        except Exception as e:
+            db.close()
+            return jsonify({"error": f"Error generating spirals: {e}"}), 400
+    elif is_lemniscate and (data.get('a_sweep') or data.get('a_range')):
+        a_range = data.get('a_range', [0.1, 10, 0.1])
+        try:
+            buf = generate_lemniscate_plots(expr_norm, a_range)
+        except Exception as e:
+            db.close()
+            return jsonify({"error": f"Error generating lemniscates: {e}"}), 400
     else:
         if 'a' in expr_norm:
             if data.get('a_sweep') == True or data.get('a_range'):
