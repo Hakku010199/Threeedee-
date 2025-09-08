@@ -1,3 +1,22 @@
+def set_axes_cross_at_zero_with_arrows(ax):
+    # Move left and bottom spines to zero position
+    ax.spines['left'].set_position('zero')
+    ax.spines['bottom'].set_position('zero')
+    # Hide the top and right spines
+    ax.spines['right'].set_color('none')
+    ax.spines['top'].set_color('none')
+    # Set ticks position
+    ax.xaxis.set_ticks_position('bottom')
+    ax.yaxis.set_ticks_position('left')
+    # Add arrows at the end of axes
+    xlim = ax.get_xlim()
+    ylim = ax.get_ylim()
+    # Arrow for x-axis
+    ax.annotate('', xy=(xlim[1], 0), xytext=(xlim[1] - (xlim[1]-xlim[0])*0.05, 0),
+                arrowprops=dict(arrowstyle="->", color='black', lw=1.5))
+    # Arrow for y-axis
+    ax.annotate('', xy=(0, ylim[1]), xytext=(0, ylim[1] - (ylim[1]-ylim[0])*0.05),
+                arrowprops=dict(arrowstyle="->", color='black', lw=1.5))
 # Helper for Archimedean spiral sweep
 def generate_archimedean_spiral_plots(expr_template, a_range, b_range):
     t = np.linspace(0, 4 * np.pi, 2000)
@@ -24,8 +43,9 @@ def generate_archimedean_spiral_plots(expr_template, a_range, b_range):
     ax.set_ylabel("y")
     ax.grid(True)
     ax.set_aspect('equal', adjustable='box')
-    buf = io.BytesIO()
     plt.tight_layout()
+    set_axes_cross_at_zero_with_arrows(ax)
+    buf = io.BytesIO()
     fig.savefig(buf, format="png", dpi=120)
     plt.close(fig)
     buf.seek(0)
@@ -52,8 +72,9 @@ def generate_lemniscate_plots(expr_template, a_range):
     ax.set_ylabel("y")
     ax.grid(True)
     ax.set_aspect('equal', adjustable='box')
-    buf = io.BytesIO()
     plt.tight_layout()
+    set_axes_cross_at_zero_with_arrows(ax)
+    buf = io.BytesIO()
     fig.savefig(buf, format="png", dpi=120)
     plt.close(fig)
     buf.seek(0)
@@ -85,8 +106,9 @@ def generate_rose_curve_plots(expr_template, a_range, k_range, types=("cos", "si
     ax.set_ylabel("y")
     ax.grid(True)
     ax.set_aspect('equal', adjustable='box')
-    buf = io.BytesIO()
     plt.tight_layout()
+    set_axes_cross_at_zero_with_arrows(ax)
+    buf = io.BytesIO()
     fig.savefig(buf, format="png", dpi=120)
     plt.close(fig)
     buf.seek(0)
@@ -116,8 +138,9 @@ def generate_cardioid_plots(expr_template, a_range, types=("cos", "sin")):
     ax.set_ylabel("y")
     ax.grid(True)
     ax.set_aspect('equal', adjustable='box')
-    buf = io.BytesIO()
     plt.tight_layout()
+    set_axes_cross_at_zero_with_arrows(ax)
+    buf = io.BytesIO()
     fig.savefig(buf, format="png", dpi=120)
     plt.close(fig)
     buf.seek(0)
@@ -233,8 +256,9 @@ def generate_cartesian_plot(expr_str: str, a_range=None):
     ax.grid(True)
     ax.set_aspect('equal', adjustable='box')
 
-    buf = io.BytesIO()
     plt.tight_layout()
+    set_axes_cross_at_zero_with_arrows(ax)
+    buf = io.BytesIO()
     fig.savefig(buf, format="png", dpi=120)
     plt.close(fig)
     buf.seek(0)
