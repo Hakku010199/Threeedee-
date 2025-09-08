@@ -401,7 +401,6 @@ Their polar representation highlights the relationship between distance and angl
                 <li className="submenu-item" onClick={() => setActive('Spirals')}>Logarithmic</li>
               </ul>
             </li>
-            <li className={`menu-item ${active === 'Conics' ? 'active' : ''}`} onClick={() => setActive('Conics')}>Conics</li>
           </ul>
         </nav>
       </div>

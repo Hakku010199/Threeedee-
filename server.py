@@ -1,3 +1,34 @@
+# Helper for rose curve sweep
+def generate_rose_curve_plots(expr_template, a_range, k_range):
+    t = np.linspace(0, 2 * np.pi, 2000)
+    fig = plt.figure(figsize=(7,7))
+    ax = fig.add_subplot(111)
+    a_start, a_end, a_step = a_range
+    k_start, k_end, k_step = k_range
+    for a in np.arange(a_start, a_end + a_step, a_step):
+        for k in range(k_start, k_end + 1, k_step):
+            expr_str = expr_template.replace('a', f'({a})').replace('k', f'({k})')
+            expr_sym = sp.sympify(expr_str, locals=_allowed)
+            f = sp.lambdify(theta, expr_sym, modules=["numpy"])
+            try:
+                r = f(t)
+                r = np.array(r, dtype=float)
+                x = r * np.cos(t)
+                y = r * np.sin(t)
+                ax.plot(x, y, alpha=0.5)
+            except Exception:
+                continue
+    ax.set_title(f"Rose curves for a in [{a_start},{a_end}], k in [{k_start},{k_end}]")
+    ax.set_xlabel("x")
+    ax.set_ylabel("y")
+    ax.grid(True)
+    ax.set_aspect('equal', adjustable='box')
+    buf = io.BytesIO()
+    plt.tight_layout()
+    fig.savefig(buf, format="png", dpi=120)
+    plt.close(fig)
+    buf.seek(0)
+    return buf
 from flask import Flask, request, send_file, send_from_directory, jsonify
 from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -81,21 +112,31 @@ def normalize_expression(expr_raw: str) -> str:
         e = e[2:]
     return e
 
-def generate_cartesian_plot(expr_str: str):
+def generate_cartesian_plot(expr_str: str, a_range=None):
     expr_sym = sp.sympify(expr_str, locals=_allowed)
-    f = sp.lambdify(theta, expr_sym, modules=["numpy"])
     t = np.linspace(0, 2 * np.pi, 2000)
-    r = f(t)
-    r = np.array(r, dtype=float)
-    x = r * np.cos(t)
-    y = r * np.sin(t)
-
     fig = plt.figure(figsize=(6,6))
     ax = fig.add_subplot(111)
-    ax.plot(x, y, color="#1976d2", linewidth=2)
+    if a_range is not None:
+        for a in np.linspace(a_range[0], a_range[1], 10):
+            f = sp.lambdify((theta, sp.symbols('a')), expr_sym, modules=["numpy"])
+            r = f(t, a)
+            r = np.array(r, dtype=float)
+            x = r * np.cos(t)
+            y = r * np.sin(t)
+            ax.plot(x, y, label=f"a={a:.2f}")
+        ax.legend()
+        ax.set_title(f"r = {str(expr_sym)} for a in [{a_range[0]}, {a_range[1]}]")
+    else:
+        f = sp.lambdify(theta, expr_sym, modules=["numpy"])
+        r = f(t)
+        r = np.array(r, dtype=float)
+        x = r * np.cos(t)
+        y = r * np.sin(t)
+        ax.plot(x, y, color="#1976d2", linewidth=2)
+        ax.set_title(f"r = {str(expr_sym)}")
     ax.set_xlabel("x")
     ax.set_ylabel("y")
-    ax.set_title(f"r = {str(expr_sym)}")
     ax.grid(True)
     ax.set_aspect('equal', adjustable='box')
 
@@ -162,11 +203,29 @@ def plot():
         return jsonify({"error": "No expression provided"}), 400
 
     expr_norm = normalize_expression(expr_raw)
-    try:
-        buf = generate_cartesian_plot(expr_norm)
-    except Exception as e:
-        db.close()
-        return jsonify({"error": f"Error generating plot: {e}"}), 400
+    # Check for rose curve sweep
+    a_range = None
+    k_range = None
+    is_rose = False
+    if ('a' in expr_norm and 'k' in expr_norm and ('cos' in expr_norm or 'sin' in expr_norm)):
+        is_rose = True
+    if is_rose and data.get('a_sweep') and data.get('k_sweep'):
+        a_range = [0.1, 10, 0.1]
+        k_range = [1, 10, 1]
+        try:
+            buf = generate_rose_curve_plots(expr_norm, a_range, k_range)
+        except Exception as e:
+            db.close()
+            return jsonify({"error": f"Error generating rose curves: {e}"}), 400
+    else:
+        if 'a' in expr_norm:
+            if data.get('a_sweep') == True or data.get('a_range'):
+                a_range = data.get('a_range', [0.1, 10])
+        try:
+            buf = generate_cartesian_plot(expr_norm, a_range=a_range)
+        except Exception as e:
+            db.close()
+            return jsonify({"error": f"Error generating plot: {e}"}), 400
 
     filename = f"{uuid.uuid4().hex}.png"
     filepath = os.path.join(PLOTS_DIR, filename)
