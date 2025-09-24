@@ -360,8 +360,10 @@ Their polar representation highlights the relationship between distance and angl
             <div className="half bottom-half">
               <div className="half-header"><h4>3D Model</h4></div>
               <div className="half-content">
-                {/* Show 3D rose curve model if input matches rose curve pattern */}
-                {promptText.match(/r\s*=\s*[0-9.]+\s*\*\s*sin\(\s*[0-9]+θ\s*\)/i) ? (
+                {/* Show 3D model for rose curves and cardioids */}
+                {promptText.match(
+                  /r\s*=\s*[0-9.]+\s*\*\s*sin\(\s*[0-9]+θ\s*\)|r\s*=\s*[0-9.]+\s*\*\s*\(\s*1\s*\+\s*(sin|cos)\(\s*θ\s*\)\s*\)|r\s*=\s*[0-9.]+\s*\+\s*(sin|cos)\(\s*θ\s*\)|r\s*=\s*[0-9.]+\s*\+\s*[0-9.]+\s*\*\s*(sin|cos)\(\s*θ\s*\)/i
+                ) ? (
                   <ThreeDModel expr={promptText} />
                 ) : (
                   <div className="placeholder">3D model preview will appear here (placeholder)</div>
