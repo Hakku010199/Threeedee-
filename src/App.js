@@ -199,11 +199,17 @@ Their polar representation highlights the relationship between distance and angl
       return;
     }
     
+    console.log('Generating 3D model for:', prompt);
+    console.log('Setting threeDPrompt to:', prompt);
+    console.log('Setting show3DModel to: true');
+    
     setThreeDPrompt(prompt);
     setShow3DModel(true);
     setRedDivColor('#000000');
-    console.log('Generating 3D model for:', prompt);
   };
+
+  // Add debug log to track state changes
+  console.log('App state - threeDPrompt:', threeDPrompt, 'show3DModel:', show3DModel, 'active:', active);
 
   return (
     <>
@@ -448,11 +454,17 @@ Their polar representation highlights the relationship between distance and angl
         position: 'relative'
       }}>
         {show3DModel && threeDPrompt ? (
-          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <ThreeDModel expr={threeDPrompt} />
-          </div>
+          <>
+            {console.log('Rendering ThreeDModel with expr:', threeDPrompt)}
+            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <ThreeDModel expr={threeDPrompt} />
+            </div>
+          </>
         ) : (
-          '3D'
+          <>
+            {console.log('Not rendering ThreeDModel - show3DModel:', show3DModel, 'threeDPrompt:', threeDPrompt)}
+            3D
+          </>
         )}
       </div>
     )}
@@ -478,7 +490,7 @@ Their polar representation highlights the relationship between distance and angl
           <input
             id="3dprompt"
             type="text"
-            placeholder="Enter polar equation (e.g., r=2*sin(4θ), r=1*(1+cos(θ)))"
+            placeholder="Enter polar equation (e.g., r=2*sin(4θ), r²=2²cos(2θ), r=1+0.5*theta)"
             value={threeDPrompt}
             onChange={(e) => setThreeDPrompt(e.target.value)}
             onKeyDown={(e) => {
@@ -535,7 +547,7 @@ Their polar representation highlights the relationship between distance and angl
           color: '#666',
           textAlign: 'center'
         }}>
-          <strong>Examples:</strong> r=2*sin(4θ) | r=1*(1+cos(θ)) | r=3+2*sin(θ) | r=1*sin(3θ)
+          <strong>Examples:</strong> r=2*sin(4θ) | r=1*(1+cos(θ)) | r=3+2*sin(θ) | r²=2²cos(2θ) | r=1+0.5*theta
         </div>
       </div>
     )}
