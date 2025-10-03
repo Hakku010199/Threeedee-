@@ -8,6 +8,10 @@ import ThreeDModel from './ThreeDModel';
 function App() {
   // Content for the bottom section
   const sectionContent = {
+    Home: {
+      heading: "Welcome to Polar Function Visualizer",
+      text: "Select a topic from the menu to learn more about polar functions and their mathematical properties."
+    },
     Introduction: {
       heading: "Introduction",
       text: `A polar function is a mathematical relation expressed in the polar coordinate system, where each point on a plane is represented by two quantities: its distance from the origin, called the radius r, and the angle θ, measured from the positive x-axis. Unlike the Cartesian system, which uses the form y=f(x), polar functions are written as r=f(θ). This form is particularly advantageous for describing curves that exhibit circular, radial, or symmetric properties, many of which are complex or cumbersome to represent in Cartesian coordinates. Conversion between polar and Cartesian systems is straightforward using the transformations x=rcos(θ) and y=rsin(θ). Because of these characteristics, polar functions are widely applied in physics, engineering, computer graphics, and fields where rotational or radial symmetry naturally arises.
@@ -84,7 +88,7 @@ Their polar representation highlights the relationship between distance and angl
   };
   const [authOpen, setAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState('login');
-  const [active, setActive] = useState('Introduction');
+  const [active, setActive] = useState('Home');
   const contentRef = useRef(null);
   // Username state (simulate login for now)
   const [username, setUsername] = useState('just-hakku'); // Replace with null if you want to hide by default
@@ -117,6 +121,9 @@ Their polar representation highlights the relationship between distance and angl
   const [plotUrl, setPlotUrl] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [redDivColor, setRedDivColor] = useState('#dc3545');
+  const [threeDPrompt, setThreeDPrompt] = useState('');
+  const [show3DModel, setShow3DModel] = useState(false);
 
   // ✅ FIXED sanitizeExpression
   function sanitizeExpression(expr) {
@@ -183,6 +190,20 @@ Their polar representation highlights the relationship between distance and angl
       setLoading(false);
     }
   }
+
+  // Function to handle 3D view generation
+  const handle3DView = () => {
+    const prompt = document.getElementById('3dprompt').value.trim();
+    if (!prompt) {
+      alert('Please enter a polar equation');
+      return;
+    }
+    
+    setThreeDPrompt(prompt);
+    setShow3DModel(true);
+    setRedDivColor('#000000');
+    console.log('Generating 3D model for:', prompt);
+  };
 
   return (
     <>
@@ -346,7 +367,7 @@ Their polar representation highlights the relationship between distance and angl
 
         <section className="main-body">
           <div className="center-split">
-            <div className="half top-half">
+            <div className="single-preview">
               <div className="half-header"><h4>2D Preview</h4></div>
               <div className="half-content">
                 {plotUrl ? (
@@ -354,19 +375,13 @@ Their polar representation highlights the relationship between distance and angl
                 ) : (
                   <canvas ref={canvasRef} className="plot-canvas" />
                 )}
-              </div>
-            </div>
-
-            <div className="half bottom-half">
-              <div className="half-header"><h4>3D Model</h4></div>
-              <div className="half-content">
                 {/* Show 3D model for rose curves and cardioids */}
                 {promptText.match(
                   /r\s*=\s*[0-9.]+\s*\*\s*sin\(\s*[0-9]+θ\s*\)|r\s*=\s*[0-9.]+\s*\*\s*\(\s*1\s*\+\s*(sin|cos)\(\s*θ\s*\)\s*\)|r\s*=\s*[0-9.]+\s*\+\s*(sin|cos)\(\s*θ\s*\)|r\s*=\s*[0-9.]+\s*\+\s*[0-9.]+\s*\*\s*(sin|cos)\(\s*θ\s*\)/i
                 ) ? (
                   <ThreeDModel expr={promptText} />
                 ) : (
-                  <div className="placeholder">3D model preview will appear here (placeholder)</div>
+                  <div className="placeholder"></div>
                 )}
               </div>
             </div>
@@ -413,8 +428,120 @@ Their polar representation highlights the relationship between distance and angl
         </nav>
       </div>
     </div>
-    {/* Content Section Below Main Layout */}
-    {sectionContent[active] && (
+
+    {/* Single 3D Placeholder - Only show when Home is active */}
+    {active === 'Home' && (
+      <div id="3d" style={{
+        height: '1000px',
+        width: '100%',
+        backgroundColor: redDivColor,
+        color: 'white',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: '4rem',
+        fontWeight: 'bold',
+        margin: '20px 0',
+        border: '5px solid #fff',
+        borderRadius: '12px',
+        boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)',
+        position: 'relative'
+      }}>
+        {show3DModel && threeDPrompt ? (
+          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <ThreeDModel expr={threeDPrompt} />
+          </div>
+        ) : (
+          '3D'
+        )}
+      </div>
+    )}
+
+    {/* Prompt Box with View Button - Only show when Home is active */}
+    {active === 'Home' && (
+      <div style={{
+        width: '100%',
+        padding: '20px',
+        margin: '20px 0',
+        backgroundColor: '#f8f9fc',
+        borderRadius: '12px',
+        boxShadow: '0 2px 12px rgba(30,30,60,0.07)',
+        border: '1px solid #e0e8ff'
+      }}>
+        <div style={{
+          display: 'flex',
+          gap: '15px',
+          alignItems: 'center',
+          maxWidth: '800px',
+          margin: '0 auto'
+        }}>
+          <input
+            id="3dprompt"
+            type="text"
+            placeholder="Enter polar equation (e.g., r=2*sin(4θ), r=1*(1+cos(θ)))"
+            value={threeDPrompt}
+            onChange={(e) => setThreeDPrompt(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                handle3DView();
+              }
+            }}
+            style={{
+              flex: 1,
+              padding: '12px 16px',
+              fontSize: '1rem',
+              border: '2px solid #ddd',
+              borderRadius: '8px',
+              outline: 'none',
+              transition: 'border-color 0.3s ease',
+              backgroundColor: 'white'
+            }}
+            onFocus={(e) => e.target.style.borderColor = '#667eea'}
+            onBlur={(e) => e.target.style.borderColor = '#ddd'}
+          />
+          <button
+            id="view"
+            style={{
+              padding: '12px 24px',
+              fontSize: '1rem',
+              fontWeight: '600',
+              color: 'white',
+              backgroundColor: '#667eea',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.backgroundColor = '#5a6fd8';
+              e.target.style.transform = 'translateY(-1px)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.backgroundColor = '#667eea';
+              e.target.style.transform = 'translateY(0)';
+            }}
+            onClick={handle3DView}
+          >
+            View
+          </button>
+        </div>
+        
+        {/* Example equations */}
+        <div style={{
+          marginTop: '15px',
+          fontSize: '0.9rem',
+          color: '#666',
+          textAlign: 'center'
+        }}>
+          <strong>Examples:</strong> r=2*sin(4θ) | r=1*(1+cos(θ)) | r=3+2*sin(θ) | r=1*sin(3θ)
+        </div>
+      </div>
+    )}
+
+    {/* Content Section Below Introduction Area */}
+    {sectionContent[active] && active !== 'Home' && (
       <div
         ref={contentRef}
         className="content-section fade-in"
