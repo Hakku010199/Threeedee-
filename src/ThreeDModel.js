@@ -176,7 +176,7 @@ export default function ThreeDModel({ expr }) {
 
     console.log('Final curve type:', curveType, 'params:', params);
 
-    // Generate points
+    // Generate points with 3D variation
     const points = [];
     // For spirals, use more turns to show the spiral effect
     const maxTheta = curveType === "spiral" ? 6 * Math.PI : 2 * Math.PI;
@@ -184,12 +184,14 @@ export default function ThreeDModel({ expr }) {
     
     for (let i = 0; i <= numPoints; i++) {
       const theta = (i / numPoints) * maxTheta;
-      let r, x, y;
+      let r, x, y, z;
       
       if (curveType === "rose") {
         r = params.a * Math.sin(params.k * theta);
         x = r * Math.cos(theta);
         y = r * Math.sin(theta);
+        // Add 3D variation: gentle wave in Z-direction for rose curves
+        z = Math.sin(theta * 2) * 0.3;
       } else if (curveType === "cardioid") {
         if (params.form === "mul") {
           // r = a(1 + trigθ)
@@ -200,11 +202,15 @@ export default function ThreeDModel({ expr }) {
         }
         x = r * Math.cos(theta);
         y = r * Math.sin(theta);
+        // Add 3D variation: heart-shaped extrusion with oscillation
+        z = Math.cos(theta * 3) * 0.2;
       } else if (curveType === "spiral") {
         // r = a + b*θ (Archimedean spiral)
         r = params.a + params.b * theta;
         x = r * Math.cos(theta);
         y = r * Math.sin(theta);
+        // Add 3D variation: ascending spiral in Z-direction
+        z = theta * 0.08;
       } else if (curveType === "lemniscate") {
         // r² = a²*trig(2θ), so r = a*sqrt(|trig(2θ)|)
         const trigValue = params.trig === "sin" ? Math.sin(2 * theta) : Math.cos(2 * theta);
@@ -214,22 +220,26 @@ export default function ThreeDModel({ expr }) {
           r = params.a * Math.sqrt(trigValue);
           x = r * Math.cos(theta);
           y = r * Math.sin(theta);
-          points.push(new THREE.Vector3(x, y, 0));
+          // Add 3D variation: figure-8 with Z-twist
+          z = Math.sin(theta * 4) * 0.25;
+          points.push(new THREE.Vector3(x, y, z));
           
           // Also add the negative r values to complete the figure-8
           if (r > 0) {
             r = -params.a * Math.sqrt(trigValue);
             x = r * Math.cos(theta);
             y = r * Math.sin(theta);
-            points.push(new THREE.Vector3(x, y, 0));
+            // Opposite Z-twist for negative r values
+            z = -Math.sin(theta * 4) * 0.25;
+            points.push(new THREE.Vector3(x, y, z));
           }
         }
         continue; // Skip the normal point addition below
       }
       
-      // Add points for non-lemniscate curves
+      // Add points for non-lemniscate curves with 3D coordinates
       if (curveType !== "lemniscate") {
-        points.push(new THREE.Vector3(x, y, 0));
+        points.push(new THREE.Vector3(x, y, z));
       }
     }
 
@@ -241,30 +251,60 @@ export default function ThreeDModel({ expr }) {
       return;
     }
 
-    // Create tube geometry along the curve
+    // Create tube geometry along the curve with enhanced 3D appearance
     const curve = new THREE.CatmullRomCurve3(points);
-    const geometry = new THREE.TubeGeometry(curve, 400, 0.05, 16, false);
-    const material = new THREE.MeshNormalMaterial();
+    const geometry = new THREE.TubeGeometry(curve, 400, 0.12, 20, false); // ✅ Increased radius from 0.05 to 0.12, more segments
+    
+    // ✅ Cyan-Yellow mixed color for all curves
+    const material = new THREE.MeshPhongMaterial({ 
+      color: 0x00FFAA,        // ✅ Cyan-green base color
+      emissive: 0x332200,     // ✅ Yellow emissive glow
+      specular: 0xFFFF44,     // ✅ Bright yellow-green specular highlights
+      shininess: 150,
+      transparent: true,
+      opacity: 0.9,
+      side: THREE.DoubleSide  // ✅ Render both sides for better visibility
+    });
+    
     const mesh = new THREE.Mesh(geometry, material);
 
-    // Scene setup
+    // Scene setup with enhanced lighting
     const scene = new THREE.Scene();
     scene.background = new THREE.Color('#000000'); // Set background to black
     scene.add(mesh);
-
-    // Camera setup
-    // Camera setup
-
-// Push camera further back for spirals
-
-const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 100);
     
-    // Push camera further back for spirals to get better view
+    // Add ambient lighting for overall illumination
+    const ambientLight = new THREE.AmbientLight(0x404040, 0.6); // ✅ Increased ambient for better visibility
+    scene.add(ambientLight);
+    
+    // Add directional light for 3D depth and shadows
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0); // ✅ Increased intensity
+    directionalLight.position.set(10, 10, 10);
+    scene.add(directionalLight);
+    
+    // ✅ Add cyan accent light for color enhancement
+    const cyanLight = new THREE.PointLight(0x00FFFF, 0.4, 100);
+    cyanLight.position.set(-10, 10, 5);
+    scene.add(cyanLight);
+    
+    // ✅ Add yellow accent light for color mixing
+    const yellowLight = new THREE.PointLight(0xFFFF00, 0.4, 100);
+    yellowLight.position.set(10, -10, 5);
+    scene.add(yellowLight);
+
+    // Enhanced camera setup for better 3D visualization
+    const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 100);
+    
+    // Position camera to show 3D depth better
     if (curveType === "spiral") {
-      camera.position.z = 20; // Increase distance for better spiral view
+      camera.position.set(15, 10, 20); // Better angle for spirals
+    } else if (curveType === "lemniscate") {
+      camera.position.set(3, 2, 4);    // Good angle for figure-8
     } else {
-      camera.position.z = 4;   // Standard distance for roses and cardioids
+      camera.position.set(3, 2, 4);    // Good angle for roses and cardioids
     }
+    
+    camera.lookAt(0, 0, 0); // Look at the center of the scene
 
     // Renderer setup
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
